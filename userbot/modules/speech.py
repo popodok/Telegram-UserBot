@@ -156,13 +156,13 @@ def megre_sounds(audio_file, second_file = "r"):
 
     #merge
     #duration_audio=int(os.popen(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {audio_file}').read().split('.')[0])
-    duration_audio=int(os.popen(f'ffprobe -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {audio_file}').read().split('.')[0])
+    duration_audio=int(os.popen(f'ffprobe -v panic -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {audio_file}').read().split('.')[0])
     #duration_stock=int(os.popen(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 media/{second_file}.ogg').read().split('.')[0])
-    duration_stock=int(os.popen(f'ffprobe -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 media/{second_file}.ogg').read().split('.')[0])
+    duration_stock=int(os.popen(f'ffprobe -v panic -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 media/{second_file}.ogg').read().split('.')[0])
     if(duration_audio <= duration_stock):
-        os.system(f'ffmpeg -filter_complex "amovie={audio_file} [a0]; amovie=media/{second_file}.ogg [a1]; [a0][a1] amix=inputs=2:duration=shortest [aout]" -map [aout] -acodec libopus -f ogg {new_name}')
+        os.system(f'ffmpeg -v panic -filter_complex "amovie={audio_file} [a0]; amovie=media/{second_file}.ogg [a1]; [a0][a1] amix=inputs=2:duration=shortest [aout]" -map [aout] -acodec libopus -f ogg {new_name}')
     else:
-        os.system(f'ffmpeg -filter_complex "amovie={audio_file} [a0]; amovie=media/{second_file}.ogg [a1]; [a0][a1] amix=inputs=2:duration=longest [aout]" -map [aout] -acodec libopus -f ogg {new_name}')
+        os.system(f'ffmpeg -v panic -filter_complex "amovie={audio_file} [a0]; amovie=media/{second_file}.ogg [a1]; [a0][a1] amix=inputs=2:duration=longest [aout]" -map [aout] -acodec libopus -f ogg {new_name}')
 
     os.remove(audio_file)
 
