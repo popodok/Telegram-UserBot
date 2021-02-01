@@ -3,7 +3,7 @@ asyncurban
 spectra
 lottie
 cairosvg
-pytubex
+git+https://github.com/nficano/pytube
 pillow
 wakeonlan
 psutil
