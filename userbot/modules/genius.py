@@ -41,16 +41,22 @@ async def gen(e):
             hed = {'Authorization': 'Bearer ' + spftoken}
             url = 'https://api.spotify.com/v1/me/player/currently-playing'
             response = get(url, headers=hed)
-            data = loads(response.content)
-            isLocal = data['item']['is_local']
-            if isLocal:
-                  artist = data['item']['artists'][0]['name']
-            else:
-                  artist = data['item']['album']['artists'][0]['name']
-            name = data['item']['name']
-            print(artist + " - " + name)
-            await e.edit("**Searching for song **" + name + "** by **" + artist)
-            song = genius.search_song(name, artist)
+            if response.status_code == 401:
+              e.edit("**No spotify token provided and no atributes for manually search provided. Use .lyrics <artist>, <song_name>**")
+              return
+            elif response.status_code != 200:
+              e.edit("**Can't find song in spotify and no atributes for manually search provided. Use .lyrics <artist>, <song_name>**")
+            elif response.status_code == 200: 
+              data = loads(response.content)
+              isLocal = data['item']['is_local']
+              if isLocal:
+                    artist = data['item']['artists'][0]['name']
+              else:
+                    artist = data['item']['album']['artists'][0]['name']
+              name = data['item']['name']
+              print(artist + " - " + name)
+              await e.edit("**Searching for song **" + name + "** by **" + artist)
+              song = genius.search_song(name, artist)
       if song is None:
         await e.edit("**Can't find song **" + name + "** by **" + artist)
         return
