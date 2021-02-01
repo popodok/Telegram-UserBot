@@ -67,11 +67,6 @@ async def callback(current, total):
     percent = round(current/total * 100, 2)
     await msg_for_percentage.edit(f"**Sending...**\nUploaded `{current}` out of `{total}` bytes: `{percent}%`")
 
-async def resize_photo(photo):
-    """ Resize the given photo to 512x512 """
-
-    return image
-
 CMD_HELP.update({"ytmp3": ["YtMP3",
     " - `.ytmp3 (url)`: Convert a YouTube video to a mp3 and send it.\n"
                         ]})
