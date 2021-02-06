@@ -1,5 +1,5 @@
 # Module developed by Oleh Polisan
-# You can use this file without any permission.
+# You can use this file without any permissions.
 from userbot import CONVERT_TOKEN, bot, CMD_HELP
 from userbot.events import register
 from urllib.request import urlopen, Request
@@ -33,7 +33,7 @@ async def horoh(e):
         await e.edit(f"{str_to_return}")
 
 
-CMD_HELP.update({"dictionary": ['dictionary',
-    " - `.dict <word>`: Search word interpretation in Ukrainian vocabulary goroh.pp.ua.\n"]
+CMD_HELP.update({"vocabulary": ['Vocabulary',
+    " - `.dict <word>`: Search word interpretation in Ukrainian and English vocabulary goroh.pp.ua.\n"]
 })
 
