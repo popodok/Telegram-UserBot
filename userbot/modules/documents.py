@@ -226,7 +226,7 @@ async def ppt_pdf(e):
     if  message.file.mime_type == "application/vnd.openxmlformats-officedocument.presentationml.presentation": #pptx
       file = await bot.download_file(file, "file.pptx")
       await e.edit("**Converting...**")
-      result = convertapi.convert('pdf', { 'File': 'file.pptxx' })
+      result = convertapi.convert('pdf', { 'File': 'file.pptx' })
       os.remove('file.pptx')
     if message.file.mime_type == "application/vnd.ms-powerpoint": #ppt
         file = await bot.download_file(file, "file.ppt")
