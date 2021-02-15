@@ -5,8 +5,10 @@
 """ Userbot module containing commands for keeping global notes. """
 
 from userbot.events import register
-from userbot import CMD_HELP, BOTLOG_CHATID
+from userbot import (BOTLOG, BOTLOG_CHATID, CMD_HELP, is_mongo_alive,
+                     is_redis_alive)
 from os import environ
+from userbot.modules.dbhelper import add_snip, delete_snip, get_snip, get_snips
 
 @register(outgoing=True,
           pattern=r"\$\w*",
@@ -16,25 +18,24 @@ async def on_snip(event):
     """ Snips logic. """
     if environ.get("isSuspended") == "True":
         return
-    try:
-        from userbot.modules.sql_helper.snips_sql import get_snip
-    except AttributeError:
+    if not is_mongo_alive() or not is_redis_alive():
+        await event.edit("`Database connections failing!`")
         return
     name = event.text[1:]
-    snip = get_snip(name)
+    snip = await get_snip(name)
     message_id_to_reply = event.message.reply_to_msg_id
     if not message_id_to_reply:
         message_id_to_reply = None
-    if snip and snip.f_mesg_id:
+    if snip and snip['msgid']:
         msg_o = await event.client.get_messages(entity=BOTLOG_CHATID,
-                                                ids=int(snip.f_mesg_id))
+                                                ids=snip['msgid'])
         await event.client.send_message(event.chat_id,
                                         msg_o.message,
                                         reply_to=message_id_to_reply,
                                         file=msg_o.media)
-    elif snip and snip.reply:
+    elif snip and snip['text']:
         await event.client.send_message(event.chat_id,
-                                        snip.reply,
+                                        snip['text'],
                                         reply_to=message_id_to_reply)
 
 
@@ -43,11 +44,10 @@ async def on_snip_save(event):
     """ For .snip command, saves snips for future use. """
     if environ.get("isSuspended") == "True":
         return
-    try:
-        from userbot.modules.sql_helper.snips_sql import add_snip
-    except AtrributeError:
-        await event.edit("`Running on Non-SQL mode!`")
+    if not is_mongo_alive() or not is_redis_alive():
+        await event.edit("`Database connections failing!`")
         return
+            
     keyword = event.pattern_match.group(1)
     string = event.text.partition(keyword)[2]
     msg = await event.get_reply_message()
@@ -74,7 +74,7 @@ async def on_snip_save(event):
         rep_msg = await event.get_reply_message()
         string = rep_msg.text
     success = "`Snip {} successfully. Use` **${}** `anywhere to get it`"
-    if add_snip(keyword, string, msg_id) is False:
+    if await add_snip(keyword, string, msg_id) is False:
         await event.edit(success.format('updated', keyword))
     else:
         await event.edit(success.format('saved', keyword))
@@ -85,20 +85,18 @@ async def on_snip_list(event):
     if environ.get("isSuspended") == "True":
         return
     """ For .snips command, lists snips saved by you. """
-    try:
-        from userbot.modules.sql_helper.snips_sql import get_snips
-    except AttributeError:
-        await event.edit("`Running on Non-SQL mode!`")
+    if not is_mongo_alive() or not is_redis_alive():
+        await event.edit("`Database connections failing!`")
         return
 
     message = "`No snips available right now.`"
-    all_snips = get_snips()
+    all_snips = await get_snips()
     for a_snip in all_snips:
         if message == "`No snips available right now.`":
             message = "Available snips:\n"
-            message += f"`${a_snip.snip}`\n"
+            message += f"`${a_snip['name']}`\n"
         else:
-            message += f"`${a_snip.snip}`\n"
+            message += f"`${a_snip['name']}`\n"
 
     await event.edit(message)
 
@@ -114,25 +112,11 @@ async def on_snip_delete(event):
         await event.edit("`Running on Non-SQL mode!`")
         return
     name = event.pattern_match.group(1)
-    if remove_snip(name) is True:
+    if await delete_snip(name) is True:
         await event.edit(f"`Successfully deleted snip:` **{name}**")
     else:
         await event.edit(f"`Couldn't find snip:` **{name}**")
 
-
-CMD_HELP.update({
-    "snips":
-    "\
-$<snip_name>\
-\nUsage: Gets the specified snip, anywhere.\
-\n\n.snip <name> <data> or reply to a message with .snip <name>\
-\nUsage: Saves the message as a snip (global note) with the name. (Works with pics, docs, and stickers too!)\
-\n\n.snips\
-\nUsage: Gets all saved snips.\
-\n\n.remsnip <snip_name>\
-\nUsage: Deletes the specified snip.\
-"
-})
 CMD_HELP.update({"snips": ["Snips",
     " - `$<snip_name>`: Gets the specified snip, anywhere.\n"
     " - `.snip <name> <data> or reply to a message with .snip <name>`: Saves the message as a snip (global note) with the name. (Works with pics, docs, and stickers too!)\n"

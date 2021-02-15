@@ -80,14 +80,15 @@ async def get_filter(chatid, keyword):
     return MONGO.filters.find_one({'chat_id': chatid, 'keyword': keyword})
 
 
-async def add_filter(chatid, keyword, msg):
+async def add_filter(chatid, keyword, msg, msg_id):
     to_check = await get_filter(chatid, keyword)
 
     if not to_check:
         MONGO.filters.insert_one({
             'chat_id': chatid,
             'keyword': keyword,
-            'msg': msg
+            'msg': msg,
+            'msg_id': msg_id
         })
         return True
     else:
@@ -96,10 +97,10 @@ async def add_filter(chatid, keyword, msg):
                 '_id': to_check["_id"],
                 'chat_id': to_check["chat_id"],
                 'keyword': to_check["keyword"],
-            },
-            {
-                "$set": {'msg': msg}
-            })
+            }, {"$set": {
+                'msg': msg,
+                'msg_id': msg_id
+            }})
 
         return False
 
@@ -114,7 +115,8 @@ async def delete_filter(chatid, keyword):
             '_id': to_check["_id"],
             'chat_id': to_check["chat_id"],
             'keyword': to_check["keyword"],
-            'msg': to_check["msg"]
+            'msg': to_check["msg"],
+            'msg_id': to_check["msg_id"]
         })
 
         return True
@@ -129,12 +131,11 @@ async def get_note(chatid, name):
     return MONGO.notes.find_one({'chat_id': chatid, 'name': name})
 
 
-async def add_note(chatid, name, text):
+async def add_note(chatid, name, text, msgid):
     to_check = await get_note(chatid, name)
 
     if not to_check:
-        MONGO.notes.insert_one({'chat_id': chatid, 'name': name, 'text': text})
-
+        MONGO.notes.insert_one({'chat_id': chatid, 'name': name, 'text': text, 'msg_id': msgid})
         return True
     else:
         MONGO.notes.update_one(
@@ -142,10 +143,10 @@ async def add_note(chatid, name, text):
                 '_id': to_check["_id"],
                 'chat_id': to_check["chat_id"],
                 'name': to_check["name"],
-            },
-            {
-                "$set": {'text': text}
-            })
+            }, {"$set": {
+                'text': text,
+                'msg_id': msgid
+            }})
 
         return False
 
@@ -161,8 +162,50 @@ async def delete_note(chatid, name):
             'chat_id': to_check["chat_id"],
             'name': to_check["name"],
             'text': to_check["text"],
+            'msg_id': to_check["msg_id"]
         })
 
+
+#Snips
+async def get_snips():
+    return MONGO.snips.find()
+
+
+async def get_snip(name):
+    return MONGO.snips.find_one({'name': name})
+
+
+async def add_snip(name, text, msgid):
+    to_check = await get_snip(name)
+
+    if not to_check:
+        MONGO.snips.insert_one({'name': name, 'text': text, 'msgid': msgid})
+
+        return True
+    else:
+        MONGO.snips.update_one(
+            {
+                '_id': to_check["_id"],
+                'name': to_check["name"],
+            }, {"$set": {
+                'text': text,
+                'msgid': msgid
+            }})
+
+        return False
+
+
+async def delete_snip(name):
+    to_check = await get_snip(name)
+
+    if not to_check:
+        return False
+    else:
+        MONGO.snips.delete_one({
+            '_id': to_check["_id"],
+            'name': to_check["name"],
+            'text': to_check["text"],
+        })
 
 # Lists
 async def get_lists(chatid):

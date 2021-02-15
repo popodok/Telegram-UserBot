@@ -28,7 +28,7 @@ for module_name in ALL_MODULES:
 
 LOGS.info("Your Bot is alive! Test it by typing .alive on any chat."
           " Should you need assistance, head to https://t.me/userbot_support")
-LOGS.info("Your Bot Version is 5.2")
+LOGS.info("Your Bot Version is 5.3")
 
 SEM_TEST = os.environ.get("SEMAPHORE", None)
 if SEM_TEST:
