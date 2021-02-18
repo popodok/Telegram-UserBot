@@ -86,7 +86,7 @@ async def add_filter(event):
         rep_msg = await event.get_reply_message()
         string = rep_msg.text
     success = "`Note {} successfully. Use` #{} `to get it`"
-    if await add_note(event.chat_id, notename, string[1:], msg_id) is False:
+    if await add_note(event.chat_id, notename, string, msg_id) is False:
         return await event.edit(success.format('updated', notename))
     else:
         return await event.edit(success.format('added', notename))
