@@ -388,10 +388,15 @@ async def sp_download(spdl):
   global link
   global preview_url
   global msg_for_percentage
+  global isArtist
+  global isLocal
   msg_for_percentage = spdl
   await find_song()
   if isGetted:
-    str_song_artist = artist + " - " + song
+    if isArtist:
+      str_song_artist = artist + " - " + song
+    else:
+      str_song_artist = song
     results = YoutubeSearch(str_song_artist, max_results=1).to_json()
     try:
       data = loads(results)
@@ -409,7 +414,7 @@ async def sp_download(spdl):
       await spdl.edit("**Converting to mp3...**")
       system(f"ffmpeg -loglevel panic -i 'video.webm' -vn -ab 128k -ar 44100 -y 'song.mp3'")
       remove("video.webm")
-      if preview_url != "":
+      if isLocal is False:
         system(f"wget -q -O 'picture.jpg' {preview_url}")
       else: #fetching from yt
         system(f"wget -q -O 'picture.jpg' {video.thumbnail_url}")
@@ -421,7 +426,8 @@ async def sp_download(spdl):
       audio.tags.add(APIC(mime='image/jpeg',type=3,desc=u'Cover',data=open('picture.jpg','rb').read()))
       #audio.tags.add(APIC(mime='image/jpeg',type=12,desc=u'Cover',data=open('picture.jpg','rb').read()))
       audio.tags.add(TIT2(text=song))
-      audio.tags.add(TPE1(text=artist))
+      if isArtist:
+        audio.tags.add(TPE1(text=artist))
       audio.save()
       
       if link != "":

@@ -29,12 +29,18 @@ async def youtube_mp3(ytmp3):
     os.system(f"ffmpeg -loglevel panic -i 'audio.webm' -vn -ab 128k -ar 44100 -y 'song.mp3'")
 #   os.system(f"ffmpeg -i 'audio.webm' -vn -ab 128k -ar 44100 -y '{safe_filename(video.title)}.mp3'")
     os.remove("audio.webm")
-    
-    str = stream.title
-    list = str.split("-")
-    artist = list[0][:-1]
-    song = list[1][1:]
+
     audio = MP3(f"song.mp3", ID3=ID3)
+
+    str_title = stream.title
+    list = str_title.split("-")
+    isDelimited = bool
+    if "-" in str_title:
+      artist = list[0][:-1]
+      song = list[1][1:]
+      isDelimited = True
+    else:
+      isDelimited = False
     try:
         audio.add_tags()
     except error:
@@ -42,8 +48,11 @@ async def youtube_mp3(ytmp3):
     await ytmp3.edit("**Adding tags...**")
     
     try:
-      audio.tags.add(TIT2(text=song))
-      audio.tags.add(TPE1(text=artist))
+      if isDelimited:
+        audio.tags.add(TIT2(text=song))
+        audio.tags.add(TPE1(text=artist))
+      else:
+        audio.tags.add(TIT2(text=str_title))
       audio.tags.add(APIC(mime='image/jpeg',type=3,desc=u'Cover',data=open("picture.jpg",'rb').read()))
       audio.save()
     except:
