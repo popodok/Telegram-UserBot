@@ -25,12 +25,10 @@ async def tag(e):
     return
   soup = BeautifulSoup(html, features="html.parser")
   is404 = soup.find('h1', {"class": "title"})
-  if is404 == "Документ не найден":
-    await e.edit(f"**Tag** `{import_tag}` **not found. Try another one.**")
+  divAll = soup.find('article', {"role": "article"})
+  if is404 == "Документ не найден" or divAll == None:
+    await e.edit(f"**Tag** `{import_tag}` **not found. Try another one. If you sure, that tag exists, then type to maintainer.**")
     return
-  divAll = soup.find('div', {"class": "field-item even"})
- # for spans in divAll.findAll('span'):
- #   spans.unwrap()
   H3Opis = divAll.find('h3', text="Описание")
   if H3Opis == None:
     H3Opis = divAll.find('h3', text="Описание ")
