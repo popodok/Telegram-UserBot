@@ -28,9 +28,12 @@ async def horoh(e):
     for uppercases in blocks.find_all('span', {"class": "uppercase"}):
       str_to_return = "\n\n".join((str_to_return, f"**{uppercases.text}**"))
       await e.edit(f"{str_to_return}")
-      for texts in blocks.find_all('span', {"class": "interpret-formula"}):
+      for texts in blocks.find_all('span', {"class": ["interpret-formula", "interpret-remark"]}):
         str_to_return =  "\n".join((str_to_return, texts.text))
-        await e.edit(f"{str_to_return}")
+        try:
+          await e.edit(f"{str_to_return}")
+        except:
+          pass
 
 
 CMD_HELP.update({"vocabulary": ['Vocabulary',
