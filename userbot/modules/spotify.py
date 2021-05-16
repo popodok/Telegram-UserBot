@@ -79,9 +79,9 @@ async def update_spotify_info():
     global isDefault
     global mustDisable
     spobio = ""
-    #if mustDisable:
-    # SPOTIFYCHECK = False
-    #  mustDisable = False #means disabled?
+    if mustDisable:
+     SPOTIFYCHECK = False
+     mustDisable = False #means disabled?
     
     
     while SPOTIFYCHECK:
@@ -97,6 +97,7 @@ async def update_spotify_info():
             hed = {'Authorization': 'Bearer ' + spftoken}
             url = 'https://api.spotify.com/v1/me/player/currently-playing'
             try:
+                await sleep(1) #no need to spam?
                 response = get(url,headers=hed)
                 #print(str(response.status_code))
                 if(response.status_code == 200):
@@ -107,7 +108,7 @@ async def update_spotify_info():
                   #print("SP: 401: " + response.reason)
                   await get_spotify_token()
                   #print("dirty, 104 string")
-                  await dirtyfix()
+                  #await dirtyfix()
                 else:
                   if isDefault == False:
                     await bot(UpdateProfileRequest(about=DEFAULT_BIO))
@@ -115,7 +116,7 @@ async def update_spotify_info():
                     isDefault = True
             except Exception as e:
                 isGetted = False
-                print("SP: skip, exception:" + str(e))
+                #print("SP: skip, exception:" + str(e))
                 pass #skip
             if isGetted:
               isLocal = data['item']['is_local']
@@ -143,6 +144,7 @@ async def update_spotify_info():
               if (song != oldsong or artist != oldartist) or (isWritedPlay == False and isWritedPause == False):
                   oldartist = artist
                   oldsong = song
+                  print("Changing")
                   if isLocal:
                     if isArtist:
                       spobio = BIOPREFIX + " 🎧: " + artist + " - " + song + " [LOCAL]"
@@ -178,19 +180,17 @@ async def update_spotify_info():
                         isDefault = False
                       except errors.FloodWaitError as e:
                         await sleep(e.seconds)
-                        await dirtyfix()
                   except errors.FloodWaitError as e:
                     await sleep(e.seconds)
-                    await dirtyfix()
                   errorcheck = 0
                   OLDEXCEPT = False
             else: #means no new data. NO need to update. Trying to get again by new loop 
               #print("no new data, trying again")
               pass
         except KeyError:   #long pause
-                #print("keyerror: " + date)
+                print("keyerror: " + date)
                 if errorcheck == 0:
-                  #print("182 update_token")
+                  print("182 update_token")
                   await update_token()
                 elif errorcheck == 1:
                   if OLDEXCEPT == False:
@@ -199,16 +199,12 @@ async def update_spotify_info():
                       await bot(UpdateProfileRequest(about=DEFAULT_BIO))
                     except errors.FloodWaitError as e:
                       await sleep(e.seconds)
-                      await dirtyfix()
                     isDefault = True
                   OLDEXCEPT = True
                   try:
                       await sleep(10)
-                      await dirtyfix()
                   except errors.FloodWaitError as e:
                     await sleep(e.seconds)
-                    #print("195 dirty")
-                    await dirtyfix()
         except JSONDecodeError:   #NO INFO ABOUT, user closed spotify client
             #print("JSONDecodeError")
             if OLDEXCEPT == False:
@@ -217,39 +213,28 @@ async def update_spotify_info():
                 await bot(UpdateProfileRequest(about=DEFAULT_BIO))
               except errors.FloodWaitError as e:
                 await sleep(e.seconds)
-                await dirtyfix()
               isDefault = True
             OLDEXCEPT = True
             try:
                 await sleep(10) #no need to ddos a spotify servers
-                #print("206 dirty")
-                await dirtyfix()
             except errors.FloodWaitError as e:
                 await sleep(e.seconds)
-                #print("210 dirty")
-                await dirtyfix()
         except TypeError:
-            #print("TypeError")
+            print("TypeError")
             await sleep(5)
             try:
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
-              await dirtyfix()
             isDefault = True
-            #print("217 dirty")
-            await dirtyfix()
         except IndexError:
-            #print("IndexError")
+            print("IndexError")
             await sleep(5)
             try:
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
-              await dirtyfix()
             isDefault = True
-            #print("224 dirty")
-            await dirtyfix()
         except errors.FloodWaitError as e:
             #print("Telegram anti-flood: Need to wait " + str(e.seconds) + " seconds")
             await sleep(e.seconds)
@@ -257,26 +242,15 @@ async def update_spotify_info():
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
-              await dirtyfix()
             isDefault = True
-            #print("231 dirty")
-            await dirtyfix()
         except HTTPError:
             #print("HTTPErr")
             try:
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
-              await dirtyfix()
+              #await dirtyfix()
             isDefault = True
-            #print("237 dirty")
-            await dirtyfix()
-
-        SPOTIFYCHECK = False
-        await sleep(5)
-        if mustDisable == False:
-          #print("243 dirty")
-          await dirtyfix()
     RUNNING = False
 
 
@@ -294,19 +268,6 @@ async def update_token():
     environ["spftoken"] = access_token
     errorcheck = 1
     #print("261 updta_sp_info")
-    await update_spotify_info()
-
-
-async def dirtyfix():
-    #print("dirtyfix")
-    global SPOTIFYCHECK
-    global mustDisable
-    if mustDisable == False:
-      SPOTIFYCHECK = True
-    else:
-      SPOTIFYCHECK = False
-      mustDisable = False #means disabled?
-    await sleep(5)
     await update_spotify_info()
 
 @register(outgoing=True, pattern="^.song")
@@ -499,7 +460,7 @@ async def find_song():
 async def set_biostgraph(setstbio):
     if environ.get("isSuspended") == "True":
         return
-    setrecursionlimit(700000)
+#    setrecursionlimit(700000)
     global mustDisable
     if not SPOTIFYCHECK:
         environ["errorcheck"] = "0"
