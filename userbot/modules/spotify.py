@@ -107,8 +107,6 @@ async def update_spotify_info():
                 elif response.status_code == 401: #No token provided
                   #print("SP: 401: " + response.reason)
                   await get_spotify_token()
-                  #print("dirty, 104 string")
-                  #await dirtyfix()
                 else:
                   if isDefault == False:
                     await bot(UpdateProfileRequest(about=DEFAULT_BIO))
@@ -144,7 +142,7 @@ async def update_spotify_info():
               if (song != oldsong or artist != oldartist) or (isWritedPlay == False and isWritedPause == False):
                   oldartist = artist
                   oldsong = song
-                  print("Changing")
+                  #print("Changing")
                   if isLocal:
                     if isArtist:
                       spobio = BIOPREFIX + " 🎧: " + artist + " - " + song + " [LOCAL]"
@@ -188,9 +186,9 @@ async def update_spotify_info():
               #print("no new data, trying again")
               pass
         except KeyError:   #long pause
-                print("keyerror: " + date)
+                #print("keyerror: " + date)
                 if errorcheck == 0:
-                  print("182 update_token")
+                  #print("182 update_token")
                   await update_token()
                 elif errorcheck == 1:
                   if OLDEXCEPT == False:
@@ -220,7 +218,7 @@ async def update_spotify_info():
             except errors.FloodWaitError as e:
                 await sleep(e.seconds)
         except TypeError:
-            print("TypeError")
+            #print("TypeError")
             await sleep(5)
             try:
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
@@ -228,7 +226,7 @@ async def update_spotify_info():
               await sleep(e.seconds)
             isDefault = True
         except IndexError:
-            print("IndexError")
+            #print("IndexError")
             await sleep(5)
             try:
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
@@ -249,7 +247,6 @@ async def update_spotify_info():
               await bot(UpdateProfileRequest(about=DEFAULT_BIO))
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
-              #await dirtyfix()
             isDefault = True
     RUNNING = False
 
@@ -312,11 +309,12 @@ async def show_song(song_info):
             str_song += "\n\n Youtube: `JSONDecode Error. Can't found.`"
             await msg_to_edit.edit(str_song)
             return
-          except:
-            str_song += "\n\n Youtube: `Unexcepted Error. Can't found.`"
+          except Exception as e:
+            str_song += f"\n\n Youtube: `Unexcepted Error: {e}. Can't found.`"
             await msg_to_edit.edit(str_song)
             return
           finally:
+            print("Found!")
             str_song += "\n\nFound yt song link for: `" + data['videos'][0]['title'] + '`'
             url_yt = "https://youtube.com" + data['videos'][0]['url_suffix']
             str_song += f"\n[YouTube link]({url_yt})"
@@ -461,13 +459,15 @@ async def set_biostgraph(setstbio):
     if environ.get("isSuspended") == "True":
         return
 #    setrecursionlimit(700000)
+    global SPOTIFYCHECK
     global mustDisable
     if not SPOTIFYCHECK:
         environ["errorcheck"] = "0"
         await setstbio.edit(SPO_BIO_ENABLED)
         mustDisable = False
+        SPOTIFYCHECK = True
         await get_spotify_token()
-        await dirtyfix()
+        await update_spotify_info()
     else:
         await setstbio.edit(SPO_BIO_RUNNING)
 
