@@ -172,6 +172,7 @@ async def get_snips():
 
 
 async def get_snip(name):
+    print("name: "+ name)
     return MONGO.snips.find_one({'name': name})
 
 
@@ -206,6 +207,7 @@ async def delete_snip(name):
             'name': to_check["name"],
             'text': to_check["text"],
         })
+        return True
 
 # Lists
 async def get_lists(chatid):

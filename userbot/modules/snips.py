@@ -5,8 +5,7 @@
 """ Userbot module containing commands for keeping global notes. """
 
 from userbot.events import register
-from userbot import (BOTLOG, BOTLOG_CHATID, CMD_HELP, is_mongo_alive,
-                     is_redis_alive)
+from userbot import (BOTLOG, BOTLOG_CHATID, CMD_HELP, is_mongo_alive)
 from os import environ
 from userbot.modules.dbhelper import add_snip, get_snip, get_snips
 
@@ -18,7 +17,7 @@ async def on_snip(event):
     """ Snips logic. """
     if environ.get("isSuspended") == "True":
         return
-    if not is_mongo_alive() or not is_redis_alive():
+    if not is_mongo_alive():
         await event.edit("`Database connections failing!`")
         return
     name = event.text[1:]
@@ -27,12 +26,9 @@ async def on_snip(event):
     if not message_id_to_reply:
         message_id_to_reply = None
     if snip and snip['msgid']:
-        msg_o = await event.client.get_messages(entity=BOTLOG_CHATID,
-                                                ids=snip['msgid'])
-        await event.client.send_message(event.chat_id,
-                                        msg_o.message,
-                                        reply_to=message_id_to_reply,
-                                        file=msg_o.media)
+        msg_o = await event.client.get_messages(entity=BOTLOG_CHATID,ids=snip['msgid'])
+
+        await msg_o.forward_to(event.chat_id)
     elif snip and snip['text']:
         await event.client.send_message(event.chat_id,
                                         snip['text'],
@@ -44,7 +40,7 @@ async def on_snip_save(event):
     """ For .snip command, saves snips for future use. """
     if environ.get("isSuspended") == "True":
         return
-    if not is_mongo_alive() or not is_redis_alive():
+    if not is_mongo_alive():
         await event.edit("`Database connections failing!`")
         return
             
@@ -71,6 +67,7 @@ async def on_snip_save(event):
             )
             return
     elif event.reply_to_msg_id and not string:
+        print("reaply to msg id and not string")
         rep_msg = await event.get_reply_message()
         string = rep_msg.text
     success = "`Snip {} successfully. Use` **${}** `anywhere to get it`"
@@ -85,7 +82,7 @@ async def on_snip_list(event):
     if environ.get("isSuspended") == "True":
         return
     """ For .snips command, lists snips saved by you. """
-    if not is_mongo_alive() or not is_redis_alive():
+    if not is_mongo_alive():
         await event.edit("`Database connections failing!`")
         return
 
