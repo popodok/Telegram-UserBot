@@ -8,7 +8,7 @@ from userbot.events import register
 from userbot import (BOTLOG, BOTLOG_CHATID, CMD_HELP, is_mongo_alive,
                      is_redis_alive)
 from os import environ
-from userbot.modules.dbhelper import add_snip, delete_snip, get_snip, get_snips
+from userbot.modules.dbhelper import add_snip, get_snip, get_snips
 
 @register(outgoing=True,
           pattern=r"\$\w*",
@@ -107,7 +107,7 @@ async def on_snip_delete(event):
     if environ.get("isSuspended") == "True":
         return
     try:
-        from userbot.modules.sql_helper.snips_sql import remove_snip
+        from userbot.modules.dbhelper import delete_snip
     except AttributeError:
         await event.edit("`Running on Non-SQL mode!`")
         return
