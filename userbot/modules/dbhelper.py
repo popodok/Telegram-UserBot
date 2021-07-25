@@ -172,7 +172,6 @@ async def get_snips():
 
 
 async def get_snip(name):
-    print("name: "+ name)
     return MONGO.snips.find_one({'name': name})
 
 
