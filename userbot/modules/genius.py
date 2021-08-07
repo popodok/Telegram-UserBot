@@ -1,8 +1,7 @@
-#Developed by Oleh Polisan. get_args_split_by kanged from Friendly Telegram (https://gitlab.com/friendly-telegram/).
-from userbot import BOTLOG, bot, BOTLOG_CHATID, CMD_HELP, GENIUS_API, SPOTIFY_KEY, SPOTIFY_DC
+from userbot import BOTLOG, bot, BOTLOG_CHATID, CMD_HELP, GENIUS_API
 from userbot.events import register
 from userbot.utils import get_args_split_by
-import spotify_token as st
+from userbot.modules.spotify import get_info
 from requests import get
 import lyricsgenius
 from os import environ
@@ -27,49 +26,38 @@ async def gen(e):
             song = genius.search_song(name, artist)
       else:
             await e.edit("**Trying to get Spotify lyrics...**")
-            if SPOTIFY_KEY is None:
-                  await e.edit("**Spotify cache KEY is missing**")
-                  return
-            if SPOTIFY_DC is None:
-                  await e.edit("**Spotify cache DC is missing**")
-                  return
-            #getting spotify token
-            sptoken = st.start_session(SPOTIFY_DC, SPOTIFY_KEY) 
-            access_token = sptoken[0]
-            environ["spftoken"] = access_token
-            spftoken = environ.get("spftoken", None)
-            hed = {'Authorization': 'Bearer ' + spftoken}
-            url = 'https://api.spotify.com/v1/me/player/currently-playing'
-            response = get(url, headers=hed)
-            if response.status_code == 401:
-              e.edit("**No spotify token provided and no atributes for manually search provided. Use .lyrics <artist>, <song_name>**")
-              return
-            elif response.status_code != 200:
-              e.edit("**Can't find song in spotify and no atributes for manually search provided. Use .lyrics <artist>, <song_name>**")
-            elif response.status_code == 200: 
-              data = loads(response.content)
-              isLocal = data['item']['is_local']
-              if isLocal:
-                    artist = data['item']['artists'][0]['name']
-              else:
-                    artist = data['item']['album']['artists'][0]['name']
-              name = data['item']['name']
-              print(artist + " - " + name)
-              await e.edit("**Searching for song **" + name + "** by **" + artist)
-              song = genius.search_song(name, artist)
-      if song is None:
-        await e.edit("**Can't find song **" + name + "** by **" + artist)
-        return
-      elif len(song.lyrics) > 4096:
-        lyrics_1 = song.lyrics[0:4096]
-        lyrics_2 = song.lyrics[4096:len(song.lyrics)]
-        await e.edit("**Lyrics for: **" + artist + " - " + name + ": \n")
-        await e.client.send_message(e.chat_id, lyrics_1)
-        await e.client.send_message(e.chat_id, lyrics_2)
+            isGetted = False
+            data = get_info()
+            isLocal = data['item']['is_local']
+            if data['item']['artists'][0]['name'] == "":
+              isArtist = False
+            if isLocal:
+              artist = data['item']['artists'][0]['name']
+              song_name = data['item']['name']
+              isGetted = True
+              isArtist = True
+              link = ""
+            else:
+              artist = data['item']['album']['artists'][0]['name']
+              song_name = data['item']['name']
+              link = data['item']['external_urls']['spotify']
+              isGetted = True
+              isArtist = True
+              await e.edit("**Searching for song **" + song_name + "** by **" + artist)
+              song = genius.search_song(song_name, artist)
 
+      if song is None:
+        await e.edit("**Can't find song **" + song_name + "** by **" + artist)
+        return
+      
+      elif len(song.lyrics) > 4096:
+        await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n")
+        msgs = [song.lyrics[i:i + 4096] for i in range(0, len(song.lyrics), 4096)]
+        for text in msgs:
+          await e.client.send_message(e.chat_id, text)
         
-      elif (len(song.lyrics + artist + name) + 20) <= 4096:
-        await e.edit("**Lyrics for: **" + artist + " - " + name + " \n" + song.lyrics)
+      else:
+        await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n" + song.lyrics)
       
 CMD_HELP.update({"lyrics": ["Lyrics",
     " - `.lyrics <song>, <author>`: Search lyrics in Genius platform\n"

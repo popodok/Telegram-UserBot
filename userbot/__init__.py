@@ -82,8 +82,6 @@ ALIVE_NAME = os.environ.get("ALIVE_NAME", None)
 
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", None)
 
-SPOTIFY_DC = os.environ.get("SPOTIFY_DC", None)
-SPOTIFY_KEY = os.environ.get("SPOTIFY_KEY", None)
 
 
 BIO_PREFIX = os.environ.get("BIO_PREFIX", None)

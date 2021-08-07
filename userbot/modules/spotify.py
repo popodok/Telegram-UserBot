@@ -1,9 +1,9 @@
 from asyncio import sleep
 from json import loads
 from json.decoder import JSONDecodeError
-from os import environ, system, remove
-from sys import setrecursionlimit
-import spotify_token as st
+from os import environ, system, remove, getcwd
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 from time import gmtime, strftime
 from requests import get
 from requests.exceptions import HTTPError, ConnectionError
@@ -16,8 +16,7 @@ from pytube import YouTube
 from pytube.helpers import safe_filename
 from telethon import types
 msg_for_percentage = types.Message
-from userbot import (BIO_PREFIX, BOTLOG, BOTLOG_CHATID, CMD_HELP, DEFAULT_BIO,
-                     SPOTIFY_KEY, SPOTIFY_DC, bot)
+from userbot import (BIO_PREFIX, BOTLOG, BOTLOG_CHATID, CMD_HELP, DEFAULT_BIO, bot)
 from userbot.events import register
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, APIC, error, TIT2, TPE2, TOPE, TPE1
@@ -49,15 +48,11 @@ isArtist = True
 mustDisable = False
 msg_to_edit = types.Message
 # ================================================
-async def get_spotify_token():
-    try:
-      sptoken = st.start_session(SPOTIFY_DC, SPOTIFY_KEY)
-    except HTTPError:
-      await sleep(1)
-      await get_spotify_token()
-    access_token = sptoken[0]
-    environ["spftoken"] = access_token
-
+def get_info():
+  cache_path=getcwd() + "/sp_token"
+  sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope="user-read-playback-state", cache_path=cache_path))
+  response = sp.current_playback()
+  return response
 
 async def update_spotify_info():
     global artist
@@ -84,39 +79,16 @@ async def update_spotify_info():
      mustDisable = False #means disabled?
     
     
-    while SPOTIFYCHECK:
-        isGetted = False
-          
+    while SPOTIFYCHECK: 
         if isDefault == True:
           oldsong = ""
           oldartist = ""
-        try:
-            date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            RUNNING = True
-            spftoken = environ.get("spftoken", None)
-            hed = {'Authorization': 'Bearer ' + spftoken}
-            url = 'https://api.spotify.com/v1/me/player/currently-playing'
-            try:
-                await sleep(1) #no need to spam?
-                response = get(url,headers=hed)
-                #print(str(response.status_code))
-                if(response.status_code == 200):
-                  data = loads(response.content)
-                  isGetted = True
-                  #print("SPOTIFY: response = " + str(response.status_code))
-                elif response.status_code == 401: #No token provided
-                  #print("SP: 401: " + response.reason)
-                  await get_spotify_token()
-                else:
-                  if isDefault == False:
-                    await bot(UpdateProfileRequest(about=DEFAULT_BIO))
-                    #print("SP: not 200 response, setting default.")
-                    isDefault = True
-            except Exception as e:
-                isGetted = False
-                #print("SP: skip, exception:" + str(e))
-                pass #skip
-            if isGetted:
+        date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        RUNNING = True       
+        data = get_info()
+
+        if data:
+              await sleep(1) #no need to spam?
               isLocal = data['item']['is_local']
               isPlaying = data['is_playing']
               if isLocal:
@@ -134,7 +106,6 @@ async def update_spotify_info():
               else:
                   artist = data['item']['album']['artists'][0]['name']
                   song = data['item']['name']
-
               if isWritedPlay and isPlaying == False:
                 isWritedPlay = False
               if isWritedPause and isPlaying == True:
@@ -142,7 +113,6 @@ async def update_spotify_info():
               if (song != oldsong or artist != oldartist) or (isWritedPlay == False and isWritedPause == False):
                   oldartist = artist
                   oldsong = song
-                  #print("Changing")
                   if isLocal:
                     if isArtist:
                       spobio = BIOPREFIX + " 🎧: " + artist + " - " + song + " [LOCAL]"
@@ -156,9 +126,9 @@ async def update_spotify_info():
                   elif isPlaying == True:
                     isWritedPlay = True
                   try:
-                      await sleep(5)
-                      await bot(UpdateProfileRequest(about=spobio))
-                      isDefault = False
+                     await sleep(5)
+                     await bot(UpdateProfileRequest(about=spobio))
+                     isDefault = False
                   except AboutTooLongError:
                       try:
                         short_bio = "🎧: " + song
@@ -182,90 +152,20 @@ async def update_spotify_info():
                     await sleep(e.seconds)
                   errorcheck = 0
                   OLDEXCEPT = False
-            else: #means no new data. NO need to update. Trying to get again by new loop 
-              #print("no new data, trying again")
-              pass
-        except KeyError:   #long pause
-                #print("keyerror: " + date)
-                if errorcheck == 0:
-                  #print("182 update_token")
-                  await update_token()
-                elif errorcheck == 1:
-                  if OLDEXCEPT == False:
-                    await sleep(5) #anti flood
-                    try:
-                      await bot(UpdateProfileRequest(about=DEFAULT_BIO))
-                    except errors.FloodWaitError as e:
-                      await sleep(e.seconds)
-                    isDefault = True
-                  OLDEXCEPT = True
-                  try:
-                      await sleep(10)
-                  except errors.FloodWaitError as e:
-                    await sleep(e.seconds)
-        except JSONDecodeError:   #NO INFO ABOUT, user closed spotify client
-            #print("JSONDecodeError")
-            if OLDEXCEPT == False:
-              await sleep(5) #anti flood
+        else: #means no data. NO need to update. Trying to get again by new loop          
+            if isDefault == False:
               try:
                 await bot(UpdateProfileRequest(about=DEFAULT_BIO))
               except errors.FloodWaitError as e:
                 await sleep(e.seconds)
-              isDefault = True
-            OLDEXCEPT = True
+            isDefault = True
             try:
-                await sleep(10) #no need to ddos a spotify servers
-            except errors.FloodWaitError as e:
-                await sleep(e.seconds)
-        except TypeError:
-            #print("TypeError")
-            await sleep(5)
-            try:
-              await bot(UpdateProfileRequest(about=DEFAULT_BIO))
+              await sleep(10) #no need to ddos a spotify servers
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
-            isDefault = True
-        except IndexError:
-            #print("IndexError")
-            await sleep(5)
-            try:
-              await bot(UpdateProfileRequest(about=DEFAULT_BIO))
-            except errors.FloodWaitError as e:
-              await sleep(e.seconds)
-            isDefault = True
-        except errors.FloodWaitError as e:
-            #print("Telegram anti-flood: Need to wait " + str(e.seconds) + " seconds")
-            await sleep(e.seconds)
-            try:
-              await bot(UpdateProfileRequest(about=DEFAULT_BIO))
-            except errors.FloodWaitError as e:
-              await sleep(e.seconds)
-            isDefault = True
-        except HTTPError:
-            #print("HTTPErr")
-            try:
-              await bot(UpdateProfileRequest(about=DEFAULT_BIO))
-            except errors.FloodWaitError as e:
-              await sleep(e.seconds)
-            isDefault = True
+            await sleep(5) #anti flood
     RUNNING = False
 
-
-async def update_token():
-    try:
-      sptoken = st.start_session(SPOTIFY_DC, SPOTIFY_KEY)
-    except HTTPError:
-      await sleep(1)
-      #print("253 update_token")
-      await update_token()
-    except:
-      print("Can't get sp token. The token is likely expired. Change your key and DC!")
-      await update_token()
-    access_token = sptoken[0]
-    environ["spftoken"] = access_token
-    errorcheck = 1
-    #print("261 updta_sp_info")
-    await update_spotify_info()
 
 @register(outgoing=True, pattern="^.song")
 async def show_song(song_info):
@@ -314,7 +214,6 @@ async def show_song(song_info):
             await msg_to_edit.edit(str_song)
             return
           finally:
-            print("Found!")
             str_song += "\n\nFound yt song link for: `" + data['videos'][0]['title'] + '`'
             url_yt = "https://youtube.com" + data['videos'][0]['url_suffix']
             str_song += f"\n[YouTube link]({url_yt})"
@@ -333,6 +232,10 @@ async def show_song(song_info):
               pass
             try:
               remove('preview.jpeg')
+            except:
+              pass
+            try:
+              remove('preview.jpg')
             except:
               pass
             return
@@ -369,7 +272,7 @@ async def sp_download(spdl):
       video = YouTube(link_yt)
       stream = video.streams.filter(only_audio=True, mime_type="audio/webm").last()
       await spdl.edit("**Downloading audio...**")
-      stream.download(filename="video")
+      stream.download(filename="video.webm")
       await spdl.edit("**Converting to mp3...**")
       system(f"ffmpeg -loglevel panic -i 'video.webm' -vn -ab 128k -ar 44100 -y 'song.mp3'")
       remove("video.webm")
@@ -415,50 +318,30 @@ async def find_song():
         global isLocal
         global preview_url
         isGetted = False
-        await get_spotify_token()
-        spftoken = environ.get("spftoken", None)
-        hed = {'Authorization': 'Bearer ' + spftoken}
-        url = 'https://api.spotify.com/v1/me/player/currently-playing'
-        try:
-          response = get(url,headers=hed)
-        except:
-          await song_info.edit("Something went wrong. Trying again...")
-          try:
-            await sleep(1)
-            response = get(url,headers=hed)
-          except:
-            await song_info.edit("Can't connect to spotify servers.")
-            return
-        #print(str(response.status_code))
-        if(response.status_code == 200):
-          #print("SPOTIFY: response = " + str(response.status_code))
-          data = loads(response.content)
-          isLocal = data['item']['is_local']
-          if data['item']['artists'][0]['name'] == "":
-            isArtist = False
-          if isLocal:
-            artist = data['item']['artists'][0]['name']
-            song = data['item']['name']
-            isGetted = True
-            isArtist = True
-            link = ""
-            preview_url = ""
-          else:
-              artist = data['item']['album']['artists'][0]['name']
-              song = data['item']['name']
-              link = data['item']['external_urls']['spotify']
-              preview_url = data['item']['album']['images'][0]['url']
-              isGetted = True
-              isArtist = True
+        data = get_info()
+        isLocal = data['item']['is_local']
+        if data['item']['artists'][0]['name'] == "":
+          isArtist = False
+        if isLocal:
+          artist = data['item']['artists'][0]['name']
+          song = data['item']['name']
+          isGetted = True
+          isArtist = True
+          link = ""
+          preview_url = ""
         else:
-          isGetted = False
+          artist = data['item']['album']['artists'][0]['name']
+          song = data['item']['name']
+          link = data['item']['external_urls']['spotify']
+          preview_url = data['item']['album']['images'][0]['url']
+          isGetted = True
+          isArtist = True
           
 
 @register(outgoing=True, pattern="^.spoton$")
 async def set_biostgraph(setstbio):
     if environ.get("isSuspended") == "True":
         return
-#    setrecursionlimit(700000)
     global SPOTIFYCHECK
     global mustDisable
     if not SPOTIFYCHECK:
@@ -466,7 +349,6 @@ async def set_biostgraph(setstbio):
         await setstbio.edit(SPO_BIO_ENABLED)
         mustDisable = False
         SPOTIFYCHECK = True
-        await get_spotify_token()
         await update_spotify_info()
     else:
         await setstbio.edit(SPO_BIO_RUNNING)
@@ -478,10 +360,8 @@ async def set_biodgraph(setdbio):
         return
     global SPOTIFYCHECK
     global mustDisable
-    #print("start spotoff: " + str(SPOTIFYCHECK))
     global RUNNING
     SPOTIFYCHECK = False
-    #print("changed spotoff: " + str(SPOTIFYCHECK))
     RUNNING = False
     mustDisable = True
     await bot(UpdateProfileRequest(about=DEFAULT_BIO))
@@ -491,8 +371,6 @@ async def callback(current, total):
     global msg_for_percentage
     percent = round(current/total * 100, 2)
     await msg_for_percentage.edit(f"**Sending mp3...**\nUploaded `{current}` out of `{total}` bytes: `{percent}%`")
-
-
 
 
 CMD_HELP.update({"spotify": ['Spotify',
