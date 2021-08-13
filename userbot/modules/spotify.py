@@ -89,8 +89,11 @@ async def update_spotify_info():
 
         if data:
               await sleep(1) #no need to spam?
-              isLocal = data['item']['is_local']
-              isPlaying = data['is_playing']
+              try:
+                isLocal = data['item']['is_local']
+                isPlaying = data['is_playing']
+              except:
+                pass 
               if isLocal:
                 try:
                   artist = data['item']['artists'][0]['name']
