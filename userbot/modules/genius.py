@@ -20,10 +20,10 @@ async def gen(e):
             genius = lyricsgenius.Genius(GENIUS_API)
       args = get_args_split_by(e.pattern_match.group(), ",")
       if len(args) == 2:
-            name = args[0]
+            song_name = args[0]
             artist = args[1]
-            await e.edit("**Searching for song **" + name + "** by **" + artist)
-            song = genius.search_song(name, artist)
+            await e.edit("**Searching for song **" + song_name + "** by **" + artist)
+            song = genius.search_song(song_name, artist)
       else:
             await e.edit("**Trying to get Spotify lyrics...**")
             isGetted = False
