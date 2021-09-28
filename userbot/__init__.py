@@ -110,9 +110,8 @@ TEMP_DOWNLOAD_DIRECTORY = os.environ.get("TMP_DOWNLOAD_DIRECTORY",
 #audiotag.info
 AUDIOTAG_API = os.environ.get("AUDIOTAG_API", None)
 
-# pylint: disable=invalid-name
 MAC_ADDRESS = os.environ.get("MAC", None)
-
+IP_ADDRESS = os.environ.get("IP_ADDRESS", None)
 # https://www.convertapi.com/
 CONVERT_TOKEN = os.environ.get("CONVERT_API", None)
 
