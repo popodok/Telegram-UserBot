@@ -9,7 +9,6 @@ wakeonlan
 psutil
 ffmpeg
 moviepy
-spotipy
 redis
 dnspython
 humanize
@@ -53,6 +52,6 @@ pdf2image
 cairocffi
 random-password-generator
 youtube_search
-
-
+testresources
+spotipy
 grpcio
