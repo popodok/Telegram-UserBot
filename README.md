@@ -10,7 +10,7 @@ Originaly developed by RaphielGang. Forked and modificated by me. Also there are
 - install python 3.7
 Ubuntu Based:
 ```
-$ sudo apt install python3.7 ffmpeg libopus-dev 
+$ sudo apt install python3.7 ffmpeg libopus-dev python-pip3 poppler-utils libpq-dev redis-server cairosvg
 ```
 Debian Based:
 ```
@@ -34,9 +34,9 @@ $ sudo pacman -S python
  
 - type: 
 ```
-python3.7 -m pip install -r requirements.txt
 git clone https://github.com/PolisanTheEasyNick/Telegram-UserBot.git
 cd Telegram-UserBot
+python3.7 -m pip install -r requirements.txt
 ```
 - fill config.env with nano, vim etc
 - run ./init/start.py
