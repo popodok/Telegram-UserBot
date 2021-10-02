@@ -253,7 +253,7 @@ CMD_HELP.update({"weather": ["Weather",
     " - `.weather <city> or .weather <city>, <country name/code>`: "
     "Gets the weather of a city.\n"
     " - `.forecst <city> or .forecast <city>, <country name/code>`: "
-    "Gets the weather of a city by every 3 hours.\n" 
+    "Gets the weather of a city by every 12 hours.\n" 
     " - `.setcity <city> or .setcity <city>, <country name/code>`: "
     "Set the default city for the .weather command.\n"]
 })
