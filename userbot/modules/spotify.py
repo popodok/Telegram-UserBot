@@ -28,25 +28,10 @@ SPO_BIO_DISABLED += "`Bio reverted to default.`"
 SPO_BIO_RUNNING = "`Spotify current music to bio is already running.`"
 ERROR_MSG = "`Spotify module halted, got an unexpected error.`"
 
-artist = str
-song = str
-
 BIOPREFIX = BIO_PREFIX
-link = ""
 SPOTIFYCHECK = False
-RUNNING = False
-OLDEXCEPT = False
-PARSE = False
-oldartist = ""
-oldsong = ""
-preview_url = ""
-isWritedPause = False
-isWritedPlay = False
-isGetted = False
-isDefault = True
-isArtist = True
-mustDisable = False
-msg_to_edit = types.Message
+msg_for_percentage = types.Message
+
 # ================================================
 def get_info():
   cache_path=getcwd() + "/sp_token"
@@ -55,36 +40,28 @@ def get_info():
   return response
 
 async def update_spotify_info():
-    global artist
-    global song
-    global PARSE
     global SPOTIFYCHECK
-    global RUNNING
-    global OLDEXCEPT
-    global isPlaying
-    global isLocal
-    global isArtist
-    global isWritedPause
-    global isWritedPlay
-    global oldartist
-    global oldsong
-    global errorcheck
-    global isGetted
-    global data
-    global isDefault
-    global mustDisable
+    oldartist = ""
+    oldsong = ""
+    preview_url = ""
+    isWritedPause = False
+    isWritedPlay = False
+    isGetted = False
+    isDefault = True
+    isArtist = True
+    mustDisable = False
+    artist = str
+    song = str
     spobio = ""
     if mustDisable:
      SPOTIFYCHECK = False
-     mustDisable = False #means disabled?
-    
-    
-    while SPOTIFYCHECK: 
+     mustDisable = False
+
+    while SPOTIFYCHECK:
         if isDefault == True:
           oldsong = ""
           oldartist = ""
         date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        RUNNING = True       
         data = get_info()
 
         if data:
@@ -93,7 +70,7 @@ async def update_spotify_info():
                 isLocal = data['item']['is_local']
                 isPlaying = data['is_playing']
               except:
-                pass 
+                pass
               if isLocal:
                 try:
                   artist = data['item']['artists'][0]['name']
@@ -154,8 +131,7 @@ async def update_spotify_info():
                   except errors.FloodWaitError as e:
                     await sleep(e.seconds)
                   errorcheck = 0
-                  OLDEXCEPT = False
-        else: #means no data. NO need to update. Trying to get again by new loop          
+        else: #means no data. NO need to update. Trying to get again by new loop
             if isDefault == False:
               try:
                 await bot(UpdateProfileRequest(about=DEFAULT_BIO))
@@ -167,20 +143,31 @@ async def update_spotify_info():
             except errors.FloodWaitError as e:
               await sleep(e.seconds)
             await sleep(5) #anti flood
-    RUNNING = False
 
 
 @register(outgoing=True, pattern="^.song")
 async def show_song(song_info):
         if environ.get("isSuspended") == "True":
           return
-        global isArtist
-        global artist
-        global song
-        global isGetted
-        global link
-        global preview_url
-        await find_song()
+        isGetted = False
+        data = get_info()
+        isLocal = data['item']['is_local']
+        if data['item']['artists'][0]['name'] == "":
+          isArtist = False
+        if isLocal:
+          artist = data['item']['artists'][0]['name']
+          song = data['item']['name']
+          isGetted = True
+          isArtist = True
+          link = ""
+          preview_url = ""
+        else:
+          artist = data['item']['album']['artists'][0]['name']
+          song = data['item']['name']
+          link = data['item']['external_urls']['spotify']
+          preview_url = data['item']['album']['images'][0]['url']
+          isGetted = True
+          isArtist = True
         if preview_url != "":
           system(f"wget -q -O 'preview.jpg' {preview_url}")
         str_song = "Now playing: "
@@ -248,15 +235,29 @@ async def sp_download(spdl):
   if environ.get("isSuspended") == "True":
         return
   reply_message = await spdl.get_reply_message()
-  global song
-  global artist
-  global link
-  global preview_url
   global msg_for_percentage
-  global isArtist
-  global isLocal
   msg_for_percentage = spdl
-  await find_song()
+
+  isGetted = False
+  data = get_info()
+  isLocal = data['item']['is_local']
+  if data['item']['artists'][0]['name'] == "":
+    isArtist = False
+  if isLocal:
+    artist = data['item']['artists'][0]['name']
+    song = data['item']['name']
+    isGetted = True
+    isArtist = True
+    link = ""
+    preview_url = ""
+  else:
+    artist = data['item']['album']['artists'][0]['name']
+    song = data['item']['name']
+    link = data['item']['external_urls']['spotify']
+    preview_url = data['item']['album']['images'][0]['url']
+    isGetted = True
+    isArtist = True
+
   if isGetted:
     if isArtist:
       str_song_artist = artist + " - " + song
@@ -294,14 +295,14 @@ async def sp_download(spdl):
       if isArtist:
         audio.tags.add(TPE1(text=artist))
       audio.save()
-      
+
       if link != "":
-        await spdl.client.send_file(spdl.chat.id,
+        await spdl.client.send_file(spdl.chat_id,
                               "song.mp3",
                               caption=f"[Spotify]({link}) | [YouTube]({link_yt})",
                               progress_callback=callback)
       else:
-        await spdl.client.send_file(spdl.chat.id,
+        await spdl.client.send_file(spdl.chat_id,
                               "song.mp3",
                               caption=f"[YouTube]({link_yt})",
                               progress_callback=callback)
@@ -311,35 +312,6 @@ async def sp_download(spdl):
   else:
     await spdl.edit("**Can't find current song in spotify.**")
     return
-         
-async def find_song():
-        global link
-        global isArtist
-        global artist
-        global song
-        global isGetted
-        global isLocal
-        global preview_url
-        isGetted = False
-        data = get_info()
-        isLocal = data['item']['is_local']
-        if data['item']['artists'][0]['name'] == "":
-          isArtist = False
-        if isLocal:
-          artist = data['item']['artists'][0]['name']
-          song = data['item']['name']
-          isGetted = True
-          isArtist = True
-          link = ""
-          preview_url = ""
-        else:
-          artist = data['item']['album']['artists'][0]['name']
-          song = data['item']['name']
-          link = data['item']['external_urls']['spotify']
-          preview_url = data['item']['album']['images'][0]['url']
-          isGetted = True
-          isArtist = True
-          
 
 @register(outgoing=True, pattern="^.spoton$")
 async def set_biostgraph(setstbio):
@@ -363,13 +335,11 @@ async def set_biodgraph(setdbio):
         return
     global SPOTIFYCHECK
     global mustDisable
-    global RUNNING
     SPOTIFYCHECK = False
-    RUNNING = False
     mustDisable = True
     await bot(UpdateProfileRequest(about=DEFAULT_BIO))
     await setdbio.edit(SPO_BIO_DISABLED)
-    
+
 async def callback(current, total):
     global msg_for_percentage
     percent = round(current/total * 100, 2)
