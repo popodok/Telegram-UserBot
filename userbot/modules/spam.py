@@ -43,12 +43,30 @@ async def tmeme(e):
 
 @register(outgoing=True, pattern="^.spam (.*)")
 async def spammer(e):
+    is_file = False
     if environ.get("isSuspended") == "True":
         return
+    replied_message = await e.get_reply_message()
     counter = int(e.pattern_match.group(1).split(' ', 1)[0])
-    spam_message = str(e.pattern_match.group(1).split(' ', 1)[1])
+    if replied_message.file:
+        is_file = True
+        if replied_message.sticker:
+            spam_message = replied_message.sticker 
+        elif replied_message.photo:
+            spam_message = replied_message.photo
+        elif replied_message.audio:
+            spam_message = replied_message.audio
+        else:
+            spam_message = replied_message.file
+    
+    elif replied_message.text:
+        spam_message = replied_message.text
+    else:
+        spam_message = str(e.pattern_match.group(1).split(' ', 1)[1])
     await e.delete()
-    await asyncio.wait([e.respond(spam_message) for i in range(counter)])
+
+    await asyncio.wait([e.respond(spam_message) for i in range(counter)]) if not is_file else \
+        await asyncio.wait([e.respond(file=spam_message) for i in range(counter)])
     if BOTLOG:
         await e.client.send_message(BOTLOG_CHATID, "#SPAM\n"
                                     "Spam was executed successfully")
@@ -65,7 +83,7 @@ async def tiny_pic_spam(e):
     await e.delete()
     for i in range(1, counter):
         await e.client.send_file(e.chat_id, link)
-    if BOTLOG:
+    if BOTLOG:  
         await e.client.send_message(
             BOTLOG_CHATID, "#PICSPAM\n"
             "PicSpam was executed successfully")
