@@ -63,7 +63,7 @@ async def download_video(v_url):
 
     await v_url.edit("**Downloading...**")
 
-    video_stream.download(filename=video.title)
+    video_stream.download(filename="videoytdl")
 
     url = f"https://img.youtube.com/vi/{video.video_id}/maxresdefault.jpg"
     resp = get(url)
@@ -72,11 +72,11 @@ async def download_video(v_url):
     msg_for_percentage = v_url
     await v_url.edit("**Uploading...**")
     await v_url.client.send_file(v_url.chat_id,
-                        f'{safe_filename(video.title)}.mp4',
+                        "videoytdl.mp4",
                         caption=f"{video.title}",
                         thumb="thumbnail.jpg", progress_callback=callback)
 
-    os.remove(f"{safe_filename(video.title)}.mp4")
+    os.remove("videoytdl.mp4")
     os.remove('thumbnail.jpg')
     await v_url.delete()
 
