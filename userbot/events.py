@@ -111,16 +111,16 @@ def register(**args):
 
                     ftext += result
 
-                    file = open("error.log", "w+")
+                    file = open("error.txt", "w+")
                     file.write(ftext)
                     file.close()
 
                     await check.client.send_file(
                         check.chat_id,
-                        "error.log",
+                        "error.txt",
                         caption=text,
                     )
-                    remove("error.log")
+                    remove("error.txt")
             else:
                 pass
 
