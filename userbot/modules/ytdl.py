@@ -63,7 +63,7 @@ async def download_video(v_url):
 
     await v_url.edit("**Downloading...**")
 
-    video_stream.download(filename="videoytdl")
+    video_stream.download(filename="videoytdl.mp4")
 
     url = f"https://img.youtube.com/vi/{video.video_id}/maxresdefault.jpg"
     resp = get(url)
