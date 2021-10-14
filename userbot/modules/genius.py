@@ -26,26 +26,28 @@ async def gen(e):
             song = genius.search_song(song_name, artist)
       else:
             await e.edit("**Trying to get Spotify lyrics...**")
-            isGetted = False
             data = get_info()
-            isLocal = data['item']['is_local']
-            if data['item']['artists'][0]['name'] == "":
-              isArtist = False
-            if isLocal:
-              artist = data['item']['artists'][0]['name']
-              song_name = data['item']['name']
-              isGetted = True
-              isArtist = True
-              link = ""
-            else:
-              artist = data['item']['album']['artists'][0]['name']
-              song_name = data['item']['name']
-              link = data['item']['external_urls']['spotify']
-              isGetted = True
-              isArtist = True
-              await e.edit("**Searching for song **" + song_name + "** by **" + artist)
-              song = genius.search_song(song_name, artist)
-
+            if data:
+              try:
+                temp = data['device']
+              except:
+                e.edit("Old exception detected. Please, try again :c")
+                return
+              isLocal = data['item']['is_local']
+              if data['item']['artists'][0]['name'] == "":
+                isArtist = False
+              if isLocal:
+                artist = data['item']['artists'][0]['name']
+                song_name = data['item']['name']
+                isArtist = True
+                link = ""
+              else:
+                artist = data['item']['album']['artists'][0]['name']
+                song_name = data['item']['name']
+                link = data['item']['external_urls']['spotify']
+                isArtist = True
+                await e.edit("**Searching for song **" + song_name + "** by **" + artist)
+                song = genius.search_song(song_name, artist)
       if song is None:
         await e.edit("**Can't find song **" + song_name + "** by **" + artist)
         return

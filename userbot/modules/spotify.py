@@ -65,72 +65,79 @@ async def update_spotify_info():
         data = get_info()
 
         if data:
-              await sleep(1) #no need to spam?
               try:
-                isLocal = data['item']['is_local']
-                isPlaying = data['is_playing']
-              except:
-                pass
-              if isLocal:
+                await sleep(1) #no need to spam?
                 try:
-                  artist = data['item']['artists'][0]['name']
-                  song = data['item']['name']
-                  if artist == "":
-                    isArtist = False
-                  else:
-                    isArtist = True
-                except IndexError:
-                  song = data['item']['name']
-                  artist = ""
-                  isArtist = False
-              else:
-                  artist = data['item']['album']['artists'][0]['name']
-                  song = data['item']['name']
-              if isWritedPlay and isPlaying == False:
-                isWritedPlay = False
-              if isWritedPause and isPlaying == True:
-                isWritedPause = False
-              if (song != oldsong or artist != oldartist) or (isWritedPlay == False and isWritedPause == False):
-                  oldartist = artist
-                  oldsong = song
-                  if isLocal:
-                    if isArtist:
-                      spobio = BIOPREFIX + " 🎧: " + artist + " - " + song + " [LOCAL]"
-                    else:
-                      spobio = BIOPREFIX + " 🎧: " + song + " [LOCAL]"
-                  else:
-                    spobio = BIOPREFIX + " 🎧: " + artist + " - " + song
-                  if isPlaying == False:
-                    spobio += " [PAUSED]"
-                    isWritedPause = True
-                  elif isPlaying == True:
-                    isWritedPlay = True
+                  isLocal = data['item']['is_local']
+                  isPlaying = data['is_playing']
+                except:
+                  pass
+                if isLocal:
                   try:
-                     await sleep(5)
-                     await bot(UpdateProfileRequest(about=spobio))
-                     isDefault = False
-                  except AboutTooLongError:
-                      try:
-                        short_bio = "🎧: " + song
-                        await sleep(5) #anti flood
-                        await bot(UpdateProfileRequest(about=short_bio))
-                        isDefault = False
-                      except AboutTooLongError:
-                        short_bio = "🎧: " + song
-                        await sleep(5) #anti flood
-                        symbols = 0
-                        for i in range(len(short_bio)):
-                          symbols = symbols + 1
-                        if symbols > 70:
-                          short_bio = short_bio[:67]
-                          short_bio += '...'
-                        await bot(UpdateProfileRequest(about=short_bio))
-                        isDefault = False
-                      except errors.FloodWaitError as e:
-                        await sleep(e.seconds)
-                  except errors.FloodWaitError as e:
-                    await sleep(e.seconds)
-                  errorcheck = 0
+                    artist = data['item']['artists'][0]['name']
+                    song = data['item']['name']
+                    if artist == "":
+                      isArtist = False
+                    else:
+                      isArtist = True
+                  except IndexError:
+                    song = data['item']['name']
+                    artist = ""
+                    isArtist = False
+                else:
+                    artist = data['item']['album']['artists'][0]['name']
+                    song = data['item']['name']
+                if isWritedPlay and isPlaying == False:
+                  isWritedPlay = False
+                if isWritedPause and isPlaying == True:
+                  isWritedPause = False
+                if (song != oldsong or artist != oldartist) or (isWritedPlay == False and isWritedPause == False):
+                    oldartist = artist
+                    oldsong = song
+                    if isLocal:
+                      if isArtist:
+                        spobio = BIOPREFIX + " 🎧: " + artist + " - " + song + " [LOCAL]"
+                      else:
+                        spobio = BIOPREFIX + " 🎧: " + song + " [LOCAL]"
+                    else:
+                      spobio = BIOPREFIX + " 🎧: " + artist + " - " + song
+                    if isPlaying == False:
+                      spobio += " [PAUSED]"
+                      isWritedPause = True
+                    elif isPlaying == True:
+                      isWritedPlay = True
+                    try:
+                       await sleep(5)
+                       await bot(UpdateProfileRequest(about=spobio))
+                       isDefault = False
+                    except AboutTooLongError:
+                        try:
+                          short_bio = "🎧: " + song
+                          await sleep(5) #anti flood
+                          await bot(UpdateProfileRequest(about=short_bio))
+                          isDefault = False
+                        except AboutTooLongError:
+                          short_bio = "🎧: " + song
+                          await sleep(5) #anti flood
+                          symbols = 0
+                          for i in range(len(short_bio)):
+                            symbols = symbols + 1
+                          if symbols > 70:
+                            short_bio = short_bio[:67]
+                            short_bio += '...'
+                          await bot(UpdateProfileRequest(about=short_bio))
+                          isDefault = False
+                        except errors.FloodWaitError as e:
+                          await sleep(e.seconds)
+                    except errors.FloodWaitError as e:
+                      await sleep(e.seconds)
+                    errorcheck = 0
+              except Exception as e:
+                try:
+                  test = data['device']
+                except:
+                  if BOTLOG:
+                   await bot.send_message(BOTLOG_CHATID, f"#SPOTIFY\nUnexpected error: {e}.\ndata is:\n{data}.")
         else: #means no data. NO need to update. Trying to get again by new loop
             if isDefault == False:
               try:
@@ -149,29 +156,31 @@ async def update_spotify_info():
 async def show_song(song_info):
         if environ.get("isSuspended") == "True":
           return
-        isGetted = False
         data = get_info()
-        isLocal = data['item']['is_local']
-        if data['item']['artists'][0]['name'] == "":
-          isArtist = False
-        if isLocal:
-          artist = data['item']['artists'][0]['name']
-          song = data['item']['name']
-          isGetted = True
-          isArtist = True
-          link = ""
-          preview_url = ""
-        else:
-          artist = data['item']['album']['artists'][0]['name']
-          song = data['item']['name']
-          link = data['item']['external_urls']['spotify']
-          preview_url = data['item']['album']['images'][0]['url']
-          isGetted = True
-          isArtist = True
-        if preview_url != "":
-          system(f"wget -q -O 'preview.jpg' {preview_url}")
-        str_song = "Now playing: "
-        if isGetted:
+        if data:
+          try:
+            temp = data['device']
+          except:
+            song_info.edit("Old exception detected. Please, try again :(")
+            return
+          isLocal = data['item']['is_local']
+          if data['item']['artists'][0]['name'] == "":
+            isArtist = False
+          if isLocal:
+            artist = data['item']['artists'][0]['name']
+            song = data['item']['name']
+            isArtist = True
+            link = ""
+            preview_url = ""
+          else:
+            artist = data['item']['album']['artists'][0]['name']
+            song = data['item']['name']
+            link = data['item']['external_urls']['spotify']
+            preview_url = data['item']['album']['images'][0]['url']
+            isArtist = True
+          if preview_url != "":
+            system(f"wget -q -O 'preview.jpg' {preview_url}")
+          str_song = "Now playing: "
           if (artist == "" or artist == '' or artist == ' ' or artist == " "):
             isArtist = False
           if isArtist:
@@ -186,49 +195,48 @@ async def show_song(song_info):
             await song_info.delete()
             msg_to_edit = await song_info.client.send_file(song_info.chat_id, 'preview.jpg', caption=str_song)
         else:
-          await song_info.edit("Can't find current song in spotify")
+          await song_info.edit("Can't find current song in spotify :c")
           return
         #yt link
         song_author_str = artist + ' - ' + song
-        if isGetted:
-          results = YoutubeSearch(song_author_str, max_results=1).to_json()
+        results = YoutubeSearch(song_author_str, max_results=1).to_json()
+        try:
+          data = loads(results)
+        except JSONDecodeError:
+          print(".song: JSONDecode Error. Can't get yt link.")
+          str_song += "\n\n Youtube: `JSONDecode Error. Can't found.`"
+          await msg_to_edit.edit(str_song)
+          return
+        except Exception as e:
+          str_song += f"\n\n Youtube: `Unexcepted Error: {e}. Can't found.`"
+          await msg_to_edit.edit(str_song)
+          return
+        finally:
+          str_song += "\n\nFound yt song link for: `" + data['videos'][0]['title'] + '`'
+          url_yt = "https://youtube.com" + data['videos'][0]['url_suffix']
+          str_song += f"\n[YouTube link]({url_yt})"
+          if preview_url !="": #means NOT LOCAL song in spotify and means that there are preview
+            await msg_to_edit.edit(text = str_song)
+          else: #fetching preview from yt
+            await song_info.delete()
+            video = YouTube(url_yt)
+            #system(f"wget -q -O './userbot/modules/picture.jpg' {video.thumbnail_url}")
+            r = get(video.thumbnail_url, allow_redirects=True)
+            open('picture.jpg', 'wb').write(r.content)
+            await song_info.client.send_file(song_info.chat_id, 'picture.jpg', caption=str_song)
           try:
-            data = loads(results)
-          except JSONDecodeError:
-            print(".song: JSONDecode Error. Can't get yt link.")
-            str_song += "\n\n Youtube: `JSONDecode Error. Can't found.`"
-            await msg_to_edit.edit(str_song)
-            return
-          except Exception as e:
-            str_song += f"\n\n Youtube: `Unexcepted Error: {e}. Can't found.`"
-            await msg_to_edit.edit(str_song)
-            return
-          finally:
-            str_song += "\n\nFound yt song link for: `" + data['videos'][0]['title'] + '`'
-            url_yt = "https://youtube.com" + data['videos'][0]['url_suffix']
-            str_song += f"\n[YouTube link]({url_yt})"
-            if preview_url !="": #means NOT LOCAL song in spotify and means that there are preview
-              await msg_to_edit.edit(text = str_song)
-            else: #fetching preview from yt
-              await song_info.delete()
-              video = YouTube(url_yt)
-              #system(f"wget -q -O './userbot/modules/picture.jpg' {video.thumbnail_url}")
-              r = get(video.thumbnail_url, allow_redirects=True)
-              open('picture.jpg', 'wb').write(r.content)
-              await song_info.client.send_file(song_info.chat_id, 'picture.jpg', caption=str_song)
-            try:
-              remove('picture.jpg')
-            except:
-              pass
-            try:
-              remove('preview.jpeg')
-            except:
-              pass
-            try:
-              remove('preview.jpg')
-            except:
-              pass
-            return
+            remove('picture.jpg')
+          except:
+            pass
+          try:
+            remove('preview.jpeg')
+          except:
+            pass
+          try:
+            remove('preview.jpg')
+          except:
+            pass
+          return
 
 @register(outgoing=True, pattern="^.spdl$")
 async def sp_download(spdl):
@@ -240,25 +248,29 @@ async def sp_download(spdl):
 
   isGetted = False
   data = get_info()
-  isLocal = data['item']['is_local']
-  if data['item']['artists'][0]['name'] == "":
-    isArtist = False
-  if isLocal:
-    artist = data['item']['artists'][0]['name']
-    song = data['item']['name']
-    isGetted = True
-    isArtist = True
-    link = ""
-    preview_url = ""
-  else:
-    artist = data['item']['album']['artists'][0]['name']
-    song = data['item']['name']
-    link = data['item']['external_urls']['spotify']
-    preview_url = data['item']['album']['images'][0]['url']
-    isGetted = True
-    isArtist = True
-
-  if isGetted:
+  if data:
+    try:
+      temp = data['device']
+    except:
+      spdl.edit("Old exception detected. Please, try again :(")
+      return
+    isLocal = data['item']['is_local']
+    if data['item']['artists'][0]['name'] == "":
+      isArtist = False
+    if isLocal:
+      artist = data['item']['artists'][0]['name']
+      song = data['item']['name']
+      isGetted = True
+      isArtist = True
+      link = ""
+      preview_url = ""
+    else:
+      artist = data['item']['album']['artists'][0]['name']
+      song = data['item']['name']
+      link = data['item']['external_urls']['spotify']
+      preview_url = data['item']['album']['images'][0]['url']
+      isGetted = True
+      isArtist = True
     if isArtist:
       str_song_artist = artist + " - " + song
     else:
@@ -324,6 +336,8 @@ async def set_biostgraph(setstbio):
         await setstbio.edit(SPO_BIO_ENABLED)
         mustDisable = False
         SPOTIFYCHECK = True
+        if BOTLOG:
+          await bot.send_message(BOTLOG_CHATID, "#SPOTIFY\nEnabled spotify update bio loop")
         await update_spotify_info()
     else:
         await setstbio.edit(SPO_BIO_RUNNING)
@@ -339,6 +353,8 @@ async def set_biodgraph(setdbio):
     mustDisable = True
     await bot(UpdateProfileRequest(about=DEFAULT_BIO))
     await setdbio.edit(SPO_BIO_DISABLED)
+    if BOTLOG:
+      await bot.send_message(BOTLOG_CHATID, '#SPOTIFY\nDisabled spotify update bio loop')
 
 async def callback(current, total):
     global msg_for_percentage
