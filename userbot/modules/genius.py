@@ -49,7 +49,7 @@ async def gen(e):
                 await e.edit("**Searching for song **" + song_name + "** by **" + artist)
                 song = genius.search_song(song_name, artist)
             else:
-              await e.edit("**Can't find song **" + song_name + "** by **" + artist)
+              await e.edit("**Can't find song in Spotify :c**")
               return
       
             if len(song.lyrics) > 4096:
