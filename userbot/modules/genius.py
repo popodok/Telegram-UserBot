@@ -51,7 +51,7 @@ async def gen(e):
             else:
               await e.edit("**Can't find song in Spotify :c**")
               return
-            if song.lyrics:
+            if song:
               if len(song.lyrics) > 4096:
                 await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n")
                 msgs = [song.lyrics[i:i + 4096] for i in range(0, len(song.lyrics), 4096)]
