@@ -51,14 +51,16 @@ async def gen(e):
             else:
               await e.edit("**Can't find song in Spotify :c**")
               return
-      
-            if len(song.lyrics) > 4096:
-              await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n")
-              msgs = [song.lyrics[i:i + 4096] for i in range(0, len(song.lyrics), 4096)]
-              for text in msgs:
-                await e.client.send_message(e.chat_id, text) 
+            if song.lyrics:
+              if len(song.lyrics) > 4096:
+                await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n")
+                msgs = [song.lyrics[i:i + 4096] for i in range(0, len(song.lyrics), 4096)]
+                for text in msgs:
+                  await e.client.send_message(e.chat_id, text) 
+              else:
+                await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n" + song.lyrics)
             else:
-              await e.edit("**Lyrics for: **" + artist + " - " + song_name + "\n" + song.lyrics)
+                await e.edit("**Can't find lyrics for: **" + artist + " - " + song_name + ".")
       
 CMD_HELP.update({"lyrics": ["Lyrics",
     " - `.lyrics <song>, <author>`: Search lyrics in Genius platform\n"
