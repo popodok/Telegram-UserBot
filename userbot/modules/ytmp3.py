@@ -24,7 +24,7 @@ async def youtube_mp3(ytmp3):
     stream = video.streams.filter(only_audio=True, mime_type="audio/webm").last()
     os.system(f"wget -q -O 'picture.jpg' {video.thumbnail_url}")
     await ytmp3.edit("**Downloading audio...**")
-    stream.download(filename='audio')
+    stream.download(filename='audio.webm')
     await ytmp3.edit("**Converting to mp3...**")
     os.system(f"ffmpeg -loglevel panic -i 'audio.webm' -vn -ab 128k -ar 44100 -y 'song.mp3'")
 #   os.system(f"ffmpeg -i 'audio.webm' -vn -ab 128k -ar 44100 -y '{safe_filename(video.title)}.mp3'")
