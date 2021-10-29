@@ -278,8 +278,8 @@ async def _(event):
                     await event.edit(
                         "`This seems to be some alien currency, which I can't convert right now.`"
                     )
-            except e:
-                await event.edit(str(e))
+            except Exception as e:
+                await event.edit(f"Error: {str(e)}")
         else:
             await event.edit("`Invalid syntax.`")
             return
