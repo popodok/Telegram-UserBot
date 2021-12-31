@@ -51,7 +51,19 @@ async def mention_afk(mention):
     global COUNT_MSG
     global USERS
     global ISAFK
-    if mention.message.mentioned and not (await mention.get_sender()).bot:
+    isChannelOrBot = False
+    try:
+      if (await mention.get_sender()).bot:
+        isChannelOrBot = True
+    except:
+        isChannelOrBot = False
+    try:
+      if (await mention.get_sender()).title:
+        isChannelOrBot = True
+    except:
+        isChannelOrBot = False
+    
+    if mention.message.mentioned and not isChannelOrBot:
         if ISAFK:
             if mention.sender_id not in USERS:
                 if AFKREASON:
