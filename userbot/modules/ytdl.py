@@ -29,10 +29,10 @@ async def download_video(v_url):
     if quality:
         video_stream = video.streams.filter(progressive=True,
                                             subtype="mp4",
-                                            res=quality).first()
+                                            res=quality).get_highest_resolution()
     else:
         video_stream = video.streams.filter(progressive=True,
-                                            subtype="mp4").first()
+                                            subtype="mp4").get_highest_resolution()
 
     if video_stream is None:
         all_streams = video.streams.filter(progressive=True,
