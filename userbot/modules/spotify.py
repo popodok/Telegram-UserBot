@@ -1,3 +1,4 @@
+from PIL import Image
 from asyncio import sleep
 from json import loads
 from json.decoder import JSONDecodeError
@@ -221,8 +222,12 @@ async def show_song(song_info):
             await song_info.delete()
             video = YouTube(url_yt)
             #system(f"wget -q -O './userbot/modules/picture.jpg' {video.thumbnail_url}")
-            r = get(video.thumbnail_url, allow_redirects=True)
+            thumb_url = f"https://img.youtube.com/vi/{video.video_id}/maxresdefault.jpg"
+            r = get(thumb_url, allow_redirects=True)
             open('picture.jpg', 'wb').write(r.content)
+            img = Image.open("picture.jpg")
+            img = img.crop((320,40,960,680))
+            img.save('picture.jpg')
             await song_info.client.send_file(song_info.chat_id, 'picture.jpg', caption=str_song)
           try:
             remove('picture.jpg')
