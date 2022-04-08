@@ -34,7 +34,7 @@ $ sudo pacman -S python
  
 - type: 
 ```
-git clone https://github.com/PolisanTheEasyNick/Telegram-UserBot.git
+git clone https://github.com/popodok/Telegram-UserBot.git
 cd Telegram-UserBot
 python3.7 -m pip install -r requirements.txt
 ```
@@ -43,7 +43,7 @@ python3.7 -m pip install -r requirements.txt
 
 ### How to run it on Docker:
 ```
-git clone https://github.com/PolisanTheEasyNick/Telegram-UserBot.git
+git clone https://github.com/popodok/Telegram-UserBot.git
 cd Telegram-UserBot
 ```
 - fill config.env with nano, vim etc
@@ -57,7 +57,7 @@ cd Telegram-UserBot
 ```
 pkg update
 pkg install git
-git clone https://github.com/PolisanTheEasyNick/Telegram-UserBot.git
+git clone https://github.com/popodok/Telegram-UserBot.git
 cd Telegram-UserBot
 ```
 - fill config.env with nano, vim etc
